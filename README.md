@@ -6,10 +6,10 @@ Every suggestion is welcomed, just bear in mind that I might need to research a 
 
 ### Features:
 
-    * Print values to screen
-    * Export to CSV
+* Print values to screen
+* Export to CSV
 
 ### Contact
 
-Email: [dnlsrl.kaiser@gmail.com](mailto:dnlsrl.kaiser@gmail.com)
+Email: [dnlsrl.kaiser@gmail.com](mailto:dnlsrl.kaiser@gmail.com)  
 XMPP/Jabber: [dnlsrl@xmpp.is]()
