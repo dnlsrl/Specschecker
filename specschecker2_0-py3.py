@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-# -*- coding: ISO-8859-1 -*-
 
 '''
 SPECSCHECKER 2.0
@@ -16,11 +15,13 @@ dnlsrl.kaiser@gmail.com
 '''
 
 import csv
-import regex			        # $pip install regex
-import win32com.client	        # https://sourceforge.net/projects/pywin32/files/pywin32/
+import regex                    # $pip install regex
+import win32com.client          # https://sourceforge.net/projects/pywin32/files/pywin32/
 
 def get_specs():
     '''QUERIES THE VALUES AND APPENDS TO A DICTIONARY. RETURNS A DICTIONARY'''
+
+    # ToDo: Make regex fuction to delete trailing spaces
 
     # 1. Dictionary of values
     values = {
@@ -31,9 +32,10 @@ def get_specs():
         'os': '',               #
         'ver': '',              #
         'build': '',            #
-        'arch': '',             #
+        'os_arch': '',          #
         'cpu': '',              #
         'cpu_cores': 0,         #
+        'cpu_arch': 0,
         'cpu_sn': '',           #
         'cpu_pn': '',           #
         'ram': 0,               #
@@ -48,7 +50,11 @@ def get_specs():
         'hdd_models': [],       #
         'hdd_vendors': [],      #
         'hdd_sn': [],           #
-        'has_admin': None,      #
+        'net_adapters': [],     #
+        'net_vendors': [],      #
+        'mac_addresses': [],    #
+        'connected_to': [],     #
+        'has_admin': False,     #
         }
 
     # 2. Query the computer specification values
@@ -72,8 +78,16 @@ def get_specs():
     colItems5 = objSWbemServices.ExecQuery('SELECT * FROM Win32_Processor')
     # USERS
     colItems6 = objSWbemServices.ExecQuery('SELECT * FROM Win32_UserAccount')
-        
-        
+    # NETWORK ADAPTERS
+    colItems7 = objSWbemServices.ExecQuery('SELECT * FROM Win32_NetworkAdapter')
+
+    # LIST FOR POSSIBLE VALUES INPUTTED BY THE MANUFACTURER, WHICH CAN BE ANNOYINGLY RANDOM
+    customOEM = [
+        'To Be Filled By O.E.M.',
+        '(Unidades de disco estándar)',
+        'Fill By OEM',
+        ]
+
     # ASSIGN QUERY RESULTS TO VALUES DICTIONARY
     for objItem in colItems0:
         # OPERATING SYSTEM
@@ -81,13 +95,18 @@ def get_specs():
             values['os'] = objItem.Caption
         # VERSION
         if objItem.Version != None:
-            values['ver'] = objItem.Version[0:2]
+            count = 0
+            for x in objItem.Version:
+                if x == '.':
+                    count += 1
+                if count < 2:
+                    values['ver'] += x
         # BUILD
         if objItem.BuildNumber != None:
             values['build'] = objItem.BuildNumber
         # ARCHITECTURE
         if objItem.OSArchitecture != None:
-            values['arch'] = objItem.OSArchitecture
+            values['os_arch'] = objItem.OSArchitecture
         
     for objItem in colItems1:
         # VENDOR
@@ -105,14 +124,14 @@ def get_specs():
         
     for objItem in colItems2:
         # PART NUMBER
-        if values['ver'] == '10':
-            if objItem.SystemSKUNumber != None and objItem.SystemSKUNumber != 'To be filled by O.E.M.':
+        if float(values['ver']) == 10:
+            if objItem.SystemSKUNumber != None and objItem.SystemSKUNumber not in customOEM:
                 values['pn'] = objItem.SystemSKUNumber
             else:
                 values['pn'] = 'N/A'
         else:
-            # Apparently Windows versions below 10 don't store the computer's part number in Win32_ComputerSystem.SystemSKUNumber
-            # I need to look into this
+            # Property not supported before Windows 10 and Windows Server 2016 Technical Preview
+            # https://msdn.microsoft.com/en-us/library/aa394102(v=vs.85).aspx
             values['pn'] = 'N/A'
         # TOTAL PHYSICALMEMORY
         if objItem.TotalPhysicalMemory != None:
@@ -142,7 +161,7 @@ def get_specs():
         else:
             continue
         # HDD MANUFACTURER
-        if objItem.Manufacturer != None and objItem.Manufacturer != '(Unidades de disco estándar)':
+        if objItem.Manufacturer != None and objItem.Manufacturer not in customOEM:
             values['hdd_vendors'].append(objItem.Manufacturer)
         else:
             values['hdd_vendors'].append('N/A')
@@ -158,6 +177,16 @@ def get_specs():
 
     # STORAGE SIZE
     values['storage'] = sum(values['hdd_sizes'])
+
+    # KNOWN ARCHITECTURES DICTIONARY
+    architectures = {
+        0: 'x86',
+        1: 'MIPS',
+        2: 'Alpha',
+        3: 'PowerPC',
+        6: 'ia64',
+        9: 'x64',
+        }
         
     for objItem in colItems5:
         # CPU NAME
@@ -166,14 +195,25 @@ def get_specs():
         # NUMBER OF CORES
         if objItem.NumberOfCores != None:
             values['cpu_cores'] = int(objItem.NumberOfCores)
+        # CPU ARCHITECTURE
+        if objItem.Architecture != None:
+            values['cpu_arch'] = architectures[objItem.Architecture]
         # CPU PART NUMBER
-        if objItem.PartNumber != None and objItem.PartNumber != 'To Be Filled By O.E.M.':
-            values['cpu_pn'] = objItem.PartNumber
+        if float(values['ver']) == 10:
+            if objItem.PartNumber != None and objItem.PartNumber not in customOEM:
+                values['cpu_pn'] = objItem.PartNumber
+            else:
+                values['cpu_pn'] = 'N/A'
         else:
+            # Property not supported before Windows Server 2016 Technical Preview and Windows 10
+            # https://msdn.microsoft.com/en-us/library/aa394373(v=vs.85).aspx
             values['cpu_pn'] = 'N/A'
         # CPU SERIAL NUMBER
-        if objItem.SerialNumber != None and objItem.SerialNumber != 'To Be Filled By O.E.M.':
-            values['cpu_sn'] = objItem.SerialNumber
+        if float(values['ver']) == 10:
+            if objItem.SerialNumber != None and objItem.SerialNumber not in customOEM:
+                values['cpu_sn'] = objItem.SerialNumber
+            else:
+                values['cpu_sn'] = 'N/A'
         else:
             values['cpu_sn'] = 'N/A'
         
@@ -182,6 +222,22 @@ def get_specs():
         if objItem.Name != None and objItem.Name == 'Admin':
             values['has_admin'] = True
             break
+
+    for objItem in colItems7:
+        # IDENTIFIES MAIN NETWORK ADAPTERS
+        if objItem.NetConnectionID != None and objItem.NetConnectionID != '' and 'VirtualBox' not in objItem.NetConnectionID:
+            values['net_adapters'].append(objItem.NetConnectionID)
+        else:
+            continue
+        # NETWORK ADAPTER VENDOR
+        if objItem.Manufacturer != None:
+            values['net_vendors'].append(objItem.Manufacturer)
+        # MAC ADDRESS
+        if objItem.MACAddress != None:
+            values['mac_addresses'].append(objItem.MACAddress)
+        # DETECT THEIR CONNECTION STATUS AND ADD TO DICTIONARY 'connections'
+        if objItem.NetEnabled != None and objItem.NetEnabled == True:
+            values['connected_to'].append(objItem.NetConnectionID)
 
     return values
 
@@ -200,13 +256,13 @@ def toCSV(values, filename):
     '''TAKES A DICTIONARY OF VALUES AND EXPORTS TO A CSV FILE'''
 
     headers = [x for x in values]
-    # Apparently to print the values of a dictionary I need to place the dictionary inside a list because
-    # csvwriter.writerow(row) only takes lists for parameters. It kind of make sense if you're writing several dictionaries.
+    # Apparently to print the values of a dictionary I need to place the dictionary inside a list
+    # because csvwriter.writerow(row) only takes lists for parameters. It kind of makes sense if you're writing several dictionaries.
+    # For single dictionaries, though, it just looks stupid
     unnecessary_dictInList = [values]
     with open('%s.csv' % (filename), 'w', newline = '') as csvfile:
-        # The fieldnames attribute is needed as well, sigh
         specswriter = csv.DictWriter(csvfile, delimiter = ',', fieldnames = headers)
-
+        specswriter.writeheader()
         for x in unnecessary_dictInList:
             specswriter.writerow(x)
 
@@ -214,6 +270,8 @@ def toCSV(values, filename):
 
 def nameRe(filename):
     '''USES REGEX TO CHECK WHETHER THE FILENAME HAS ANY INVALID CHARACTERS'''
+
+    # ToDo: Test this further
 
     r = regex.match('^[\w-]+', filename)
     if len(r[0]) == len(filename):

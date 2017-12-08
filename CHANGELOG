@@ -1,0 +1,22 @@
+#CHANGELOG
+
+### 06-12-2017
+
+Version 2.0 Release
+
+    [*] Complete rewrite
+    [*] Only exports to .csv, what else does anybody need these days?
+    [?] Tested only on Windows 10 64-bit
+
+### 07-12-2017
+
+Version 2.1 Release
+
+    [*] Works with Windows 8/8.1 at least, probably 7 but need to test.
+    [+] Detects network adapters, MAC addresses, and how a computer is connected to the network
+    [+] Detects CPU architectures, and differenciates between CPU arch and OS arch
+    [!] Fixed a problem with CPU_pn & CPU_sn in Windows 8.1 and lower, the property only works with Windows 10
+    [!] The OS version is better displayed
+    [!] Custom OEM data will now be stored in a list
+    [!] CSV writer now adds a row with all the fieldnames, to identify the value when the info was randomly written
+    
