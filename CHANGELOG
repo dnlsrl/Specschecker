@@ -19,4 +19,10 @@ Version 2.1 Release
     [!] The OS version is better displayed
     [!] Custom OEM data will now be stored in a list
     [!] CSV writer now adds a row with all the fieldnames, to identify the value when the info was randomly written
-    
+
+### 15-12-2017
+
+Version 2.2 Release
+
+    [!] Better comparing against regex (I think) both when checking filename inputted by user or values with trailing spaces
+    [*] Detects whether the Operating System is licensed

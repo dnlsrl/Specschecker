@@ -1,4 +1,4 @@
-# Specschecker 2.0
+# Specschecker 2
 
 This is a complete rewrite of the [original version](https://gist.github.com/dnlsrl/a286d202481f24e4652ad29899fefb5c), which I created while I was still unexperienced in programming with Python. It's not like I am an expert now, but I know better. If you compare both versions, you will notice that this one is better written (hopefully).
 
@@ -12,4 +12,4 @@ Every suggestion is welcomed, just bear in mind that I might need to research a 
 ### Contact
 
 Email: [dnlsrl.kaiser@gmail.com](mailto:dnlsrl.kaiser@gmail.com)  
-XMPP/Jabber: [dnlsrl@xmpp.is]()
+XMPP/Jabber: [dnlsrl@xmpp.is](xmpp:dnlsrl@xmpp.is)
