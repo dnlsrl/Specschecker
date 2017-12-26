@@ -279,24 +279,24 @@ def toScreen(values):
 
     for x in values:
         if type(values[x]) == list:
-            print(x.upper() + ': ' + ', '.join(str(e) for e in values[x]))
+            print('{}: '.format(x.upper()), ', '.join('{}'.format(str(e)) for e in values[x]))
         elif type(values[x]) == int or type(values[x]) == float or type(values[x]) == bool:
-            print(x.upper() + ': ' + str(values[x]))
+            print('{}: {}'.format(x.upper(), str(values[x])))
         else:
-            print(x.upper() + ': ' + values[x])
+            print('{}: {}'.format(x.upper(), values[x]))
 
 def toCSV(values, filename):
     '''TAKES A DICTIONARY OF VALUES AND EXPORTS TO A CSV FILE'''
 
     headers = [x for x in values]
     unnecessary_dictInList = [values]
-    with open('%s.csv' % (filename), 'w', newline = '') as csvfile:
+    with open('{}.csv'.format(filename), 'w', newline = '') as csvfile:
         specswriter = csv.DictWriter(csvfile, delimiter = ',', fieldnames = headers)
         specswriter.writeheader()
         for x in unnecessary_dictInList:
             specswriter.writerow(x)
 
-    print('File created and saved as "%s"\n' % (filename))
+    print('File created and saved as {}.csv\n'.format(filename))
 
 def nameRe(filename):
     '''USES REGEX TO CHECK WHETHER THE FILENAME HAS ANY INVALID CHARACTERS (TEST FURTHER)'''
@@ -325,7 +325,7 @@ def main():
     print('WELCOME TO SPECSCHECKER 2')
     print('****\n')
 
-    print('I\'m querying the specifications for this computer: %s' % (platform.node()))
+    print('I\'m querying the specifications for this computer: {}'.format(platform.node()))
     print('Please wait...\n')
     specs = get_specs()
 
