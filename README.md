@@ -9,6 +9,11 @@ Every suggestion is welcomed, just bear in mind that I might need to research a 
 * Print values to screen
 * Export to CSV
 
+### Dependencies:
+
+* [regex](https://pypi.python.org/pypi/regex)
+* [pywin32](https://sourceforge.net/projects/pywin32/files/pywin32/)
+
 ### Contact
 
 Email: [dnlsrl.kaiser@gmail.com](mailto:dnlsrl.kaiser@gmail.com)  

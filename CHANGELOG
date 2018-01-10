@@ -1,6 +1,6 @@
 #CHANGELOG
 
-### 06-12-2017
+### 06.12.2017
 
 Version 2.0 Release
 
@@ -8,7 +8,7 @@ Version 2.0 Release
     [*] Only exports to .csv, what else does anybody need these days?
     [?] Tested only on Windows 10 64-bit
 
-### 07-12-2017
+### 07.12.2017
 
 Version 2.1 Release
 
@@ -20,9 +20,29 @@ Version 2.1 Release
     [!] Custom OEM data will now be stored in a list
     [!] CSV writer now adds a row with all the fieldnames, to identify the value when the info was randomly written
 
-### 15-12-2017
+### 15.12.2017
 
 Version 2.2 Release
 
     [!] Better comparing against regex (I think) both when checking filename inputted by user or values with trailing spaces
-    [*] Detects whether the Operating System is licensed
+    [+] Detects whether the Operating System is licensed
+
+### 26.12.2017
+
+Version 2.3 Release
+
+    [?] Wondering if I should add to the version numbers even if I do a small change :/
+    [!] Better printing to screen using the format{} function (see https://stackoverflow.com/questions/5082452/python-string-formatting-vs-format#5082482)
+
+### 10.01.2017
+
+Version 2.4 Release
+
+    [*] Works with Windows 7 confirmed
+    [+] Dictionary for the network adapters part, so that regardless of the name, the program either identify them as Ethernet or Wi-Fi
+    [+] Dictionary for RAM vendors, which at times appear as a code instead of a name, it needs to get updated
+    [+] Displays the HDDs statuses
+    [-] Removed code to query for the CPU part and serial numbers (on OEM machines these values aren't registered), and physical location of RAM modules (the values are inconsistent between machines, like DIMM0 and DIMM1 referring to the first slot).
+    [!] Query of values was improved, so the script doesn't waste time reading values it won't display
+
+
