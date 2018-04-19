@@ -18,7 +18,8 @@ import csv
 import regex                    # $pip install regex
 import platform
 import win32com.client          # https://sourceforge.net/projects/pywin32/files/pywin32/
-from collections import OrderedDict as od
+from psutil import virtual_memory
+from collections import OrderedDict
 
 def valueRe(value):
     '''CHECKES WHETHER A VALUE HAS ANY TRAILING SPACES (TEST FURTHER)'''
@@ -29,7 +30,7 @@ def valueRe(value):
 
     # 2. Find the match in the value string
     for x in regex.finditer(r, value):
-        if x.group(0) != '':
+        if x.group(0) is not '':
             return x.group(0)
     else:
         # Returns the value itself if for any reason the regex search does not work
@@ -40,38 +41,7 @@ def get_specs():
     '''QUERIES THE VALUES AND APPENDS TO A DICTIONARY. RETURNS A DICTIONARY'''
 
     # 1. Dictionary of values
-    values = od({
-        'vendor': '',           #
-        'model': '',            #
-        'sn': '',               #
-        'pn': '',               #
-        'os': '',               #
-        'os_ver': '',           #
-        'os_build': '',         #
-        'os_arch': '',          #
-        'os_id': '',            #
-        'is_licensed': False,   #
-        'cpu': '',              #
-        'cpu_cores': 0,         #
-        'cpu_arch': 0,          #
-        'ram': 0,               #
-        'ram_sizes': [],        #
-        'ram_vendors': [],      #
-        'ram_sn': [],           #
-        'ram_pn': [],           #
-        'storage': 0,           #
-        'hdd_sizes': [],        #
-        'hdd_interfaces': [],   #
-        'hdd_models': [],       #
-        'hdd_vendors': [],      #
-        'hdd_sn': [],           #
-        'hdd_statuses': [],     #
-        'net_adapters': [],     #
-        'net_vendors': [],      #
-        'mac_addresses': [],    #
-        'connected_to': [],     #
-        'has_admin': False,     #
-        })
+    values = OrderedDict()
 
     # 2. Query the computer specification values
 
@@ -79,24 +49,14 @@ def get_specs():
     objWMIService = win32com.client.Dispatch('WbemScripting.SWbemLocator')
     objSWbemServices = objWMIService.ConnectServer(strComputer, 'root\cimv2')
 
-    # QUERIES FOR
-    # OS NAME, VERSION, BUILD, ARCHITECTURE, PRODUCT ID
     operatingSystem = objSWbemServices.ExecQuery('SELECT Caption, Version, BuildNumber, OSArchitecture, SerialNumber FROM Win32_OperatingSystem')
-    # VENDOR, MODEL, SERIAL NUMBER
     oemInfo = objSWbemServices.ExecQuery('SELECT Vendor, Name, IdentifyingNumber FROM Win32_ComputerSystemProduct')
-    # PART NUMBER, TOTAL PHYSICAL MEMORY
     physicalPC = objSWbemServices.ExecQuery('SELECT SystemSKUNumber, TotalPhysicalMemory FROM Win32_ComputerSystem')
-    # INDIVIDUAL SIZE, MANUFACTURER, PN, SN, LOCATION
     ramSpec = objSWbemServices.ExecQuery('SELECT Capacity, DeviceLocator, Manufacturer, PartNumber, SerialNumber FROM Win32_PhysicalMemory')
-    # DISK DRIVES INTERFACE, MANUFACTURER, SIZE, MODEL, SN
     hddSpec = objSWbemServices.ExecQuery('SELECT InterfaceType, Manufacturer, Model, SerialNumber, Size, Status FROM Win32_DiskDrive')
-    # CPU NAME, NUMBER OF CORES, SN, PN
     processorSpec = objSWbemServices.ExecQuery('SELECT Name, NumberOfCores, Architecture FROM Win32_Processor')
-    # USERS
     winUsers = objSWbemServices.ExecQuery('SELECT Name FROM Win32_UserAccount')
-    # NETWORK ADAPTERS
     networkSpec = objSWbemServices.ExecQuery('SELECT NetConnectionID, Manufacturer, MACAddress, NetEnabled FROM Win32_NetworkAdapter')
-    # LICENSING INFO
     licenseInfo = objSWbemServices.ExecQuery('SELECT ApplicationID, LicenseStatus FROM SoftwareLicensingProduct')
 
     # LIST FOR POSSIBLE VALUES INPUTTED BY THE MANUFACTURER, WHICH CAN BE ANNOYINGLY RANDOM
@@ -109,55 +69,49 @@ def get_specs():
 
     # ASSIGN QUERY RESULTS TO VALUES DICTIONARY
     for objItem in operatingSystem:
-        # OPERATING SYSTEM
-        if objItem.Caption != None:
+        if objItem.Caption is not None:
             values['os'] = objItem.Caption
-        # VERSION
-        if objItem.Version != None:
+        if objItem.Version is not None:
             count = 0
             for x in objItem.Version:
                 if x == '.':
                     count += 1
                 if count < 2:
                     values['os_ver'] += x
-        # BUILD
-        if objItem.BuildNumber != None:
+        if objItem.BuildNumber is not None:
             values['os_build'] = objItem.BuildNumber
-        # ARCHITECTURE
-        if objItem.OSArchitecture != None:
+        if objItem.OSArchitecture is not None:
             values['os_arch'] = objItem.OSArchitecture
-        # PRODUCT ID
-        if objItem.SerialNumber != None:
+        if objItem.SerialNumber is not None:
             values['os_id'] = objItem.SerialNumber
         
     for objItem in oemInfo:
-        # VENDOR
-        if objItem.Vendor != None:
+        if objItem.Vendor is not None:
             values['vendor'] = objItem.Vendor
-        # MODEL
         # Lenovo computers somehow don't store the complete model info in Win32_ComputerSystemProduct.Name
-        if objItem.Name != None and objItem.Vendor != 'LENOVO':
+        if objItem.Name is not None and objItem.Vendor is not 'LENOVO':
             values['model'] = objItem.Name
         else:
             values['model'] = objItem.Version + ' Machine Type ' + objItem.Name
-        # SERIAL NUMBER
-        if objItem.IdentifyingNumber != None:
+        if objItem.IdentifyingNumber is not None:
             values['sn'] = objItem.IdentifyingNumber
         
-    for objItem in physicalPC:
-        # PART NUMBER
-        if float(values['os_ver']) >= 10:
-            if objItem.SystemSKUNumber != None and objItem.SystemSKUNumber not in customOEM:
-                values['pn'] = objItem.SystemSKUNumber
+    try:
+        for objItem in physicalPC:
+            if float(values['os_ver']) >= 10:
+                if objItem.SystemSKUNumber is not None and objItem.SystemSKUNumber not in customOEM:
+                    values['pn'] = objItem.SystemSKUNumber
+                else:
+                    values['pn'] = 'N/A'
             else:
+                # Property not supported before Windows 10 and Windows Server 2016 Technical Preview
+                # https://msdn.microsoft.com/en-us/library/aa394102(v=vs.85).aspx
                 values['pn'] = 'N/A'
-        else:
-            # Property not supported before Windows 10 and Windows Server 2016 Technical Preview
-            # https://msdn.microsoft.com/en-us/library/aa394102(v=vs.85).aspx
-            values['pn'] = 'N/A'
-        # TOTAL PHYSICAL MEMORY
-        if objItem.TotalPhysicalMemory != None:
-            values['ram'] = round(int(objItem.TotalPhysicalMemory) / (1024 ** 3))
+            if objItem.TotalPhysicalMemory is not None:
+                values['ram'] = round(int(objItem.TotalPhysicalMemory) / (1024 ** 3))
+    except:
+        values['pn'] = 'N/A'
+        values['ram'] = round(virtual_memory()[0] / (1024 ** 3))
 
     # Dictionary of vendor codes, some of which don't directly specify a name
     ramVendors = {
@@ -166,52 +120,42 @@ def get_specs():
         'FF04000000000000': 'Ramos',
         'AD80000000000000': 'Hynix',
         'Kinston': 'Kingston',
+        'Unde': 'N/A',         # what the hell - found in a lenovo ideacentre aio
         }
             
     for objItem in ramSpec:
-        # RAM SIZE (LIST)
-        if objItem.Capacity != None:
+        if objItem.Capacity is not None:
             values['ram_sizes'].append(round(int(objItem.Capacity) / (1024 ** 3)))
-        # RAM MANUFACTURER
-        if objItem.Manufacturer != None and objItem.Manufacturer not in ramVendors:
+        if objItem.Manufacturer is not None and objItem.Manufacturer not in ramVendors:
             values['ram_vendors'].append(objItem.Manufacturer)
         else:
             values['ram_vendors'].append(ramVendors[objItem.Manufacturer])
-        # RAM PART NUMBER
-        if objItem.PartNumber != None:
+        if objItem.PartNumber is not None:
             values['ram_pn'].append(valueRe(objItem.PartNumber))
-        # RAM SERIAL NUMBER
-        if objItem.SerialNumber != None and objItem.SerialNumber not in customOEM:
+        if objItem.SerialNumber is not None and objItem.SerialNumber not in customOEM:
             values['ram_sn'].append(objItem.SerialNumber)
         else:
             values['ram_sn'].append('N/A')
         
     for objItem in hddSpec:
-        # HDD INTERFACE
         # If the storage type is USB, the drive is skipped. This script is not interested in external drives.
-        if objItem.InterfaceType != None and objItem.InterfaceType != 'USB':
+        if objItem.InterfaceType is not None and objItem.InterfaceType is not 'USB':
             values['hdd_interfaces'].append(objItem.InterfaceType)
         else:
             continue
-        # HDD MANUFACTURER
-        if objItem.Manufacturer != None and objItem.Manufacturer not in customOEM:
+        if objItem.Manufacturer is not None and objItem.Manufacturer not in customOEM:
             values['hdd_vendors'].append(objItem.Manufacturer)
         else:
             values['hdd_vendors'].append('N/A')
-        # HDD MODEL
-        if objItem.Model != None:
+        if objItem.Model is not None:
             values['hdd_models'].append(objItem.Model)
-        # HDD SERIAL NUMBER
-        if objItem.SerialNumber != None:
+        if objItem.SerialNumber is not None:
             values['hdd_sn'].append(valueRe(objItem.SerialNumber))
-        # HDD SIZE
-        if objItem.Size != None:
+        if objItem.Size is not None:
             values['hdd_sizes'].append(round(int(objItem.Size) / (1024 ** 3)))
-        # HDD STATUS
-        if objItem.Status != None:
+        if objItem.Status is not None:
             values['hdd_statuses'].append(objItem.Status)
 
-    # STORAGE SIZE
     values['storage'] = sum(values['hdd_sizes'])
 
     # KNOWN ARCHITECTURES DICTIONARY
@@ -225,21 +169,18 @@ def get_specs():
         }
         
     for objItem in processorSpec:
-        # CPU NAME
-        if objItem.Name != None:
+        if objItem.Name is not None:
             values['cpu'] = objItem.Name
-        # NUMBER OF CORES
-        if objItem.NumberOfCores != None:
+        if objItem.NumberOfCores is not None:
             values['cpu_cores'] = int(objItem.NumberOfCores)
-        # CPU ARCHITECTURE
-        if objItem.Architecture != None:
+        if objItem.Architecture is not None:
             values['cpu_arch'] = architectures[objItem.Architecture]
         
     for objItem in winUsers:
         # CHECKS IF COMPUTER HAS AN ADMIN USER
         # This is optional.
         # Added this because I use to add an "Admin" user to every computer I repair so as to get access to it in case the user loses their password.
-        if objItem.Name != None and objItem.Name == 'Admin':
+        if objItem.Name is not None and objItem.Name == 'Admin':
             values['has_admin'] = True
             break
 
@@ -249,30 +190,32 @@ def get_specs():
         'Conexión de red Bluetooth': 'Bluetooth',
         }
 
+    virtualAdapters = [
+        '',
+        'VirtualBox Host-Only Network',
+        ]
+
     for objItem in networkSpec:
         # IDENTIFIES MAIN NETWORK ADAPTERS
         # Virtual adapters are skipped. For the moment, it only ignores VirtualBox.
-        if objItem.NetConnectionID != None and objItem.NetConnectionID != '' and 'VirtualBox' not in objItem.NetConnectionID:
+        if objItem.NetConnectionID is not None and objItem.NetConnectionID not in virtualAdapters:
             if objItem.NetConnectionID in netDictionary:
                 values['net_adapters'].append(netDictionary[objItem.NetConnectionID])
             else:
                 values['net_adapters'].append(objItem.NetConnectionID)
         else:
             continue
-        # NETWORK ADAPTER VENDOR
-        if objItem.Manufacturer != None:
+        if objItem.Manufacturer is not None:
             values['net_vendors'].append(objItem.Manufacturer)
-        # MAC ADDRESS
-        if objItem.MACAddress != None:
+        if objItem.MACAddress is not None:
             values['mac_addresses'].append(objItem.MACAddress)
-        # DETECT ADAPTERS CONNECTED TO THE NETWORK
-        if objItem.NetEnabled != None and objItem.NetEnabled == True:
+        if objItem.NetEnabled is not None and objItem.NetEnabled == True:
             values['connected_to'].append(objItem.NetConnectionID)
 
     for objItem in licenseInfo:
         # CHECKS WHETHER THE OPERATING SYSTEM IS LICENSED
-        if objItem.ApplicationID != None and objItem.ApplicationID == '55c92734-d682-4d71-983e-d6ec3f16059f':
-            if objItem.LicenseStatus != None and objItem.LicenseStatus == 1:
+        if objItem.ApplicationID is not None and objItem.ApplicationID == '55c92734-d682-4d71-983e-d6ec3f16059f':
+            if objItem.LicenseStatus is not None and objItem.LicenseStatus == 1:
                 values['is_licensed'] = True
                 break
 
@@ -308,7 +251,7 @@ def nameRe(filename):
     r = '^[-\w]+$'
 
     for x in regex.finditer(r, filename):
-        if x.group(0) != '':
+        if x.group(0) is not '':
             return True
     else:
         return False
@@ -317,7 +260,7 @@ def createFile(specs):
     '''FUNCTION TO EXPORT THE DATA TO A CSV FILE'''
 
     filename = input('Please name your new file: ')
-    if filename != '' and nameRe(filename) == True:
+    if filename is not '' and nameRe(filename) == True:
         toCSV(specs, filename)
     else:
         print('The file name you specified is invalid, try with another name.')
