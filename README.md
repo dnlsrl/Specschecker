@@ -9,8 +9,8 @@ Every suggestion is welcomed, just bear in mind that I might need to research a 
 * Print values to screen
 * Export to CSV
 * Command line arguments
-    * `python specschecker2.py -s` will print the data to screen, will save to file via interactive wizard
-    * `python specschecker2.py -f filename` will save the data to a .csv file, no data printed to screen
+    * `python specschecker.py -s` will print the data to screen, will save to file via interactive wizard
+    * `python specschecker.py -f filename` will save the data to a .csv file, no data printed to screen
 
 ### Dependencies:
 
@@ -24,5 +24,5 @@ You don't have to worry about them, though, just `install pipenv` via pip, and t
 
 ### Contact
 
-Email: [dnlsrl.kaiser@gmail.com](mailto:dnlsrl.kaiser@gmail.com)  
-XMPP/Jabber: [dnlsrl@xmpp.is](xmpp:dnlsrl@xmpp.is)
+**Email**: [dnlsrl.kaiser@gmail.com](mailto:dnlsrl.kaiser@gmail.com)  
+**XMPP/Jabber**: dnlsrl@xmpp.is

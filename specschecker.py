@@ -144,18 +144,21 @@ def get_specs():
     values['hdd_statuses'] = []
         
     for objItem in hddSpec:
-        if objItem.Manufacturer is not None and objItem.Manufacturer not in customOEM:
-            values['hdd_vendors'].append(objItem.Manufacturer)
+        if objItem.InterfaceType == 'USB':
+            continue
         else:
-            values['hdd_vendors'].append('N/A')
-        if objItem.Model is not None:
-            values['hdd_models'].append(objItem.Model)
-        if objItem.SerialNumber is not None:
-            values['hdd_sn'].append(valueRe(objItem.SerialNumber))
-        if objItem.Size is not None:
-            values['hdd_sizes'].append(round(int(objItem.Size) / (1024 ** 3)))
-        if objItem.Status is not None:
-            values['hdd_statuses'].append(objItem.Status)
+            if objItem.Manufacturer is not None and objItem.Manufacturer not in customOEM:
+                values['hdd_vendors'].append(objItem.Manufacturer)
+            else:
+                values['hdd_vendors'].append('N/A')
+            if objItem.Model is not None:
+                values['hdd_models'].append(objItem.Model)
+            if objItem.SerialNumber is not None:
+                values['hdd_sn'].append(valueRe(objItem.SerialNumber))
+            if objItem.Size is not None:
+                values['hdd_sizes'].append(round(int(objItem.Size) / (1024 ** 3)))
+            if objItem.Status is not None:
+                values['hdd_statuses'].append(objItem.Status)
 
     values['storage'] = sum(values['hdd_sizes'])
 
