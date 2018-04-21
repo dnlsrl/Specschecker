@@ -53,5 +53,6 @@ Version 2.5 Release
     [!] Changed all != to is not in the code
     [!] Using an OrderedDict instead of a dictionary for the specs values
     [!] Network adapters now detect virtual machine adapters and ignores them
+    [!] USB drives are ignored
     [-] Removed a lot of unnecessary comments
     [-] Removed several unnecessary bits of information (for me), like net_vendors and hdd_interfaces
