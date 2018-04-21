@@ -8,6 +8,8 @@ name = "pypi"
 [packages]
 
 regex = "*"
+"pywin32" = "*"
+psutil = "*"
 
 
 [dev-packages]
