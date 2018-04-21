@@ -197,7 +197,6 @@ def get_specs():
         ]
 
     values['net_adapters'] = []
-    values['net_vendors'] = []
     values['mac_addresses'] = []
     values['connected_to'] = []
 
@@ -211,8 +210,6 @@ def get_specs():
                 values['net_adapters'].append(objItem.NetConnectionID)
         else:
             continue
-        if objItem.Manufacturer is not None:
-            values['net_vendors'].append(objItem.Manufacturer)
         if objItem.MACAddress is not None:
             values['mac_addresses'].append(objItem.MACAddress)
         if objItem.NetEnabled is not None and objItem.NetEnabled == True:
@@ -276,7 +273,7 @@ def main():
 
     parser = argparse.ArgumentParser(description = 'A script that queries technical specs from a computer', prog = 'specschecker')
     parser.add_argument('-s', '--screen', action = 'store_true', help = 'Prints the specs to the screen')
-    parser.add_argument('-f', '--file', nargs = 1, type = str, help = 'Saves specs data to a csv file')
+    parser.add_argument('-f', '--file', type = str, help = 'Saves specs data to a csv file')
     args = parser.parse_args()
 
     if args.screen:
@@ -299,7 +296,7 @@ def main():
         return 0
     elif args.file is not '':
         specs = get_specs()
-        createFile(specs, args.file[0])
+        createFile(specs, args.file)
 
 
 if __name__ == '__main__':

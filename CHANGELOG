@@ -42,7 +42,16 @@ Version 2.4 Release
     [+] Dictionary for the network adapters part, so that regardless of the name, the program either identify them as Ethernet or Wi-Fi
     [+] Dictionary for RAM vendors, which at times appear as a code instead of a name, it needs to get updated
     [+] Displays the HDDs statuses
-    [-] Removed code to query for the CPU part and serial numbers (on OEM machines these values aren't registered), and physical location of RAM modules (the values are inconsistent between machines, like DIMM0 and DIMM1 referring to the first slot).
     [!] Query of values was improved, so the script doesn't waste time reading values it won't display
+    [-] Removed code to query for the CPU part and serial numbers (on OEM machines these values aren't registered), and physical location of RAM modules (the values are inconsistent between machines, like DIMM0 and DIMM1 referring to the first slot).
 
 
+Version 2.5 Release
+
+    [+] New command line arguments implementation, use either -s or --screen to display the specs to screen or -f filename or --file filename to save directly to filename.csv
+    [!] Using psutil now to get the OS version due to some unknown error
+    [!] Changed all != to is not in the code
+    [!] Using an OrderedDict instead of a dictionary for the specs values
+    [!] Network adapters now detect virtual machine adapters and ignores them
+    [-] Removed a lot of unnecessary comments
+    [-] Removed several unnecessary bits of information (for me), like net_vendors and hdd_interfaces
